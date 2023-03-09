@@ -21,7 +21,7 @@ window.addEventListener("load", function(e) {
 
 				let rastit = data.rastit;
 				let palloArr = [];
-
+				let polylinesArr = [];
 					
 					// Käydään kaikki rastit läpi ja etsitään
 					//niiden lat ja lon arvot joiden perusteella
@@ -51,15 +51,7 @@ window.addEventListener("load", function(e) {
 				
 				
 			// Rastiobjekti 
-			let rastitObj = {};
-			for ( let rasti in rastit) {
-				let rLat = rastit[rasti].lat;
-				let rLon = rastit[rasti].lon;
-				let koordinaat = [];
-				koordinaat.push(rLat);
-				koordinaat.push(rLon);
-					rastitObj[rasti] = koordinaat;
-			}
+			
 				 
 		   // ---------------------------------------------------------------
 		   // ---------------------------------------------------------------
@@ -108,8 +100,23 @@ window.addEventListener("load", function(e) {
 					console.log(pallo._latlng);
 					let position = e.target.getLatLng();
 					pallo.setLatLng(new L.LatLng(position.lat, position.lng));
-					console.log(pallo._latlng);
+					console.log(pallo._tooltip._content);
+					let pallonKoodi = pallo._tooltip._content;
 					console.log(data.rastit);
+
+					for (let rasti in data.rastit) {
+						if (rastit[rasti].koodi == pallonKoodi) {
+							rastit[rasti].lat = position.lat;
+							rastit[rasti].lon = position.lng;
+							console.log(rastit[rasti]);
+							console.log(data.joukkueet);
+							console.log(data.rastit);
+						}
+					}
+
+					tsekkaaKartalla();
+
+					
 				});
 
 				}
@@ -119,7 +126,21 @@ window.addEventListener("load", function(e) {
 		
 		   });
 
-		   let polylinesArr = [];
+		   function tsekkaaKartalla() {
+			let kartallaalue = document.getElementById("kartalla");
+			for ( let pol of polylinesArr) {
+				console.log(pol);
+				mymap.removeLayer(pol);
+			}
+
+			for (let vedetyt of kartallaalue.children) {
+				console.log(vedetyt);
+			
+				piirraPolylineja(vedetyt);
+			}
+
+		   }
+		   
 		   //Funktio joka generoi randomin ideen
 		   function randomId(p) {
 			   return Math.random().toString(36).replace('0.',p || '');
@@ -154,6 +175,15 @@ window.addEventListener("load", function(e) {
 			
 		   // Joukkuelistaus 
 		   function joukkuelista () {
+			let rastitObj = {};
+			for ( let rasti in rastit) {
+				let rLat = rastit[rasti].lat;
+				let rLon = rastit[rasti].lon;
+				let koordinaat = [];
+				koordinaat.push(rLat);
+				koordinaat.push(rLon);
+					rastitObj[rasti] = koordinaat;
+			}
 			let divi = document.getElementById("joukkueet");
 			let ul = document.createElement("ul");
 			ul.setAttribute("id", "jul");
@@ -428,24 +458,7 @@ window.addEventListener("load", function(e) {
 						vedetty.style.left = e.offsetX + "px";
 						vedetty.style.top = e.offsetY + "px";
 						console.log(vedetty.textContent);
-						let arr = [];
-						for (let joukkue of joukkueet) {
-							if (vedetty.textContent.includes(joukkue.nimi)) {
-								let rastileimaukset = joukkue.rastileimaukset;
-								for (let leimaus of rastileimaukset) {
-									arr.push(rastitObj[leimaus.rasti]);
-								} let koordinaatit = arr;
-								console.log(arr);
-								let collor = vedetty.style.backgroundColor;
-								let polyline = L.polyline([koordinaatit], 
-									{id: vedetty.getAttribute("id"),
-									 color: collor}).addTo(mymap);
-									 polylinesArr.push(polyline);
-									 console.log(polylinesArr);
-								console.log(polylinesArr[0]);
-								console.log(polylinesArr[0].options.id);
-							}	
-						}
+						piirraPolylineja(vedetty);
 				
 				if (data) {
 					try {
@@ -458,7 +471,42 @@ window.addEventListener("load", function(e) {
 			});
 
 			
-			
+			function piirraPolylineja(vedetty) {
+				let rastitObj = {};
+				for ( let rasti in rastit) {
+					let rLat = rastit[rasti].lat;
+					let rLon = rastit[rasti].lon;
+					let koordinaat = [];
+					koordinaat.push(rLat);
+					koordinaat.push(rLon);
+						rastitObj[rasti] = koordinaat;
+				}
+				let arr = [];
+				for (let joukkue of joukkueet) {
+					if (vedetty.textContent.includes(joukkue.nimi)) {
+						console.log(joukkue);
+						let rastileimaukset = joukkue.rastileimaukset;
+								for (let leimaus of rastileimaukset) {
+									arr.push(rastitObj[leimaus.rasti]);
+								} let koordinaatit = arr;
+								console.log(arr);
+								for (let k of koordinaatit) {
+									if (k == undefined) {
+										koordinaatit.splice(koordinaatit.indexOf(k), 1);
+									}
+								}
+								let collor = vedetty.style.backgroundColor;
+								let polyline = L.polyline([koordinaatit], 
+									{id: vedetty.getAttribute("id"),
+									 color: collor}).addTo(mymap);
+									 polylinesArr.push(polyline);
+									 console.log(polylinesArr);
+								console.log(polylinesArr[0]);
+								console.log(polylinesArr[0].options.id);
+					}	
+				}
+				
+			}
 
 		   // ---------------------------------------------------------------
 		   // ---------------------------------------------------------------
