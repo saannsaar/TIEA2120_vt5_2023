@@ -90,3 +90,8 @@ ul {
   flex-direction: column;
 }
 
+.leaflet-tooltip {
+  border: none;
+  background-color:inherit;
+  box-shadow: none;
+}

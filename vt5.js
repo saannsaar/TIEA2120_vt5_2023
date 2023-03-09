@@ -39,7 +39,8 @@ window.addEventListener("load", function(e) {
 								class: "pallot",
 								interactive: true
 							}
-						).addTo(mymap); 
+						).addTo(mymap);
+						circle.bindTooltip(rastit[rasti].koodi, {permanent: true, width: "1px", className: "pallolabel", direction: "center"}); 
 						palloArr.push(circle);
 						
 						
@@ -81,7 +82,6 @@ window.addEventListener("load", function(e) {
 				} else {
 					mymap.removeLayer(marker);
 				
-
 				console.log(e.target);
 				e.target.setStyle({fillColor: "red"});
 				e.target.setStyle({fillOpacity: "1.0"});
@@ -89,9 +89,29 @@ window.addEventListener("load", function(e) {
 				let lat = e.target._latlng.lat;
 				let lon = e.target._latlng.lng;
 				marker = L.marker([lat, lon], {
-					class: "markkerit"
+					class: "markkerit",
+					draggable: true
+
 				}).addTo(mymap);
 				marker.className = "markerit";
+				
+				marker.addEventListener("dragstart", function(e) {
+					console.log("Drag start");
+					console.log(e.target);
+				});
+				marker.addEventListener("dragover", function(e) {
+					console.log("Drag over");
+				});
+				marker.addEventListener("dragend", function(e) {
+					console.log("Drag end");
+					console.log(e.target.getLatLng());
+					console.log(pallo._latlng);
+					let position = e.target.getLatLng();
+					pallo.setLatLng(new L.LatLng(position.lat, position.lng));
+					console.log(pallo._latlng);
+					console.log(data.rastit);
+				});
+
 				}
 				
 				console.log(document.getElementsByClassName("markerit"));
