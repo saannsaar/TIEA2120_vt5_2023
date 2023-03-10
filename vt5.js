@@ -136,20 +136,28 @@ window.addEventListener("load", function(e) {
 					}
 					for ( let joukkis of joukkueLit) {
 					    for (let j of data.joukkueet) {
-							if (joukkis.textContent.includes(j.nimi)) {
-								joukkis.textContent = "";
+							if (joukkis.firstChild.textContent.includes(j.nimi)) {
+								joukkis.firstChild.textContent = "";
 								let arra = [];
 								let rastileimaukset = j.rastileimaukset;
 									for (let leimaus of rastileimaukset) {
 										arra.push(rastitObj[leimaus.rasti]);
 									} 
 								let koordinaatit = arra;
-								joukkis.textContent = j.nimi + " (" + laskeMatka(koordinaatit) + ")";
+								joukkis.firstChild.textContent = j.nimi + " (" + laskeMatka(koordinaatit) + ")";
 							}
 						}
 					}
 
 					
+					mymap.removeLayer(marker);
+					for (let pallo of palloArr) {
+						console.log(pallo);
+						if (pallo.options.fillColor == "red") {
+							pallo.setStyle({fillColor: "#fo3"});
+							pallo.setStyle({fillOpacity: "0.3"});
+						}
+					}
 
 					
 				});
@@ -219,6 +227,11 @@ window.addEventListener("load", function(e) {
 				koordinaat.push(rLon);
 					rastitObj[rasti] = koordinaat;
 			}
+			let rastiObj = {};
+			for (let rasti in rastit) {
+				rastiObj[rasti] = rastit[rasti].koodi;
+			}
+			console.log(rastiObj);
 			let divi = document.getElementById("joukkueet");
 			let ul = document.createElement("ul");
 			ul.setAttribute("id", "jul");
@@ -228,23 +241,38 @@ window.addEventListener("load", function(e) {
 			for (let joukkue of joukkueet) {
 				let arra = [];
 				let joukkueNiminode;
+				
+			
+				
+				let li = document.createElement("li");
+
+				let detailsJ = document.createElement("details");
+				let summaryJ = document.createElement("summary");
+				let ulJ = document.createElement("ul");
 				let rastileimaukset = joukkue.rastileimaukset;
 					for (let leimaus of rastileimaukset) {
+						let liJ = document.createElement("li");
+						let rastinnimi = document.createTextNode(rastiObj[leimaus.rasti]);
 						
+						liJ.appendChild(rastinnimi);
+						ulJ.appendChild(liJ);
 						arra.push(rastitObj[leimaus.rasti]);
 						} 
 				let koordinaatit = arra;
-			
-							
-				let li = document.createElement("li");
+				
 				let joukkuenimi = document.createTextNode(joukkue.nimi + " ("+ laskeMatka(koordinaatit) + " km)");
-				li.style.backgroundColor = rainbow(joukkueet.length, joukkueet.indexOf(joukkue));
-				li.classList.add("joukkueet");
+				detailsJ.style.backgroundColor = rainbow(joukkueet.length, joukkueet.indexOf(joukkue));
+				detailsJ.classList.add("joukkueet");
 
-				li.setAttribute("draggable","true");
-				li.setAttribute("id", randomId('j_'));
-				li.appendChild(joukkuenimi);
-				ul.appendChild(li);
+				detailsJ.setAttribute("draggable","true");
+				detailsJ.setAttribute("id", randomId('j_'));
+				summaryJ.appendChild(joukkuenimi);
+
+				detailsJ.appendChild(summaryJ);
+				detailsJ.appendChild(ulJ);
+
+				
+				ul.appendChild(detailsJ);
 				
 			}
 		   }
@@ -412,7 +440,10 @@ window.addEventListener("load", function(e) {
 			item.addEventListener("dragstart", function(e) {
 				// Laitetaan joukkueen nimi yhdeksi siirrettäväksi dataksi jotta
 				// ikkunasta ulos tiputtaessa tiputetaan oikea tieto
-				e.dataTransfer.setData("text/plain", item.textContent);
+				console.log(item);
+				console.log(item.firstChild.getAttribute("id"));
+				e.dataTransfer.setData("text/plain", item.firstChild.textContent);
+				e.dataTransfer.setData("parent", item);
 				// Laitetaan id siirrettäväksi dataksi "kartalla" alueelle tiputusta varten
 				e.dataTransfer.setData("iddata", item.getAttribute("id"));
 				e.dataTransfer.setData("indexdata", index);
@@ -449,12 +480,14 @@ window.addEventListener("load", function(e) {
 				
 				let data = e.dataTransfer.getData("iddata");
 				console.log(data);
+				let parentvedetty = e.dataTransfer.getData("parent");
+				console.log(parentvedetty);
 
 				let vedetty = document.getElementById(data);
-
+				
 				
 				console.log(vedetty);
-				let vedettyid = vedetty.getAttribute("id");
+				let vedettyid = data;
 				polylinesArr.forEach(function (polly) {
 					if (polly.options.id === vedettyid) {
 						mymap.removeLayer(polly);
@@ -488,20 +521,23 @@ window.addEventListener("load", function(e) {
 			drop.addEventListener("drop", function(e) {
 				e.preventDefault();
 
-			
+						let parentvedetty = e.dataTransfer.getData("parent");
+						console.log(parentvedetty);
 
 						let data = e.dataTransfer.getData("iddata");
-						console.log(data);
+						console.log(e.dataTransfer.getData("text/plain").parentNode);
 						let vedetty = document.getElementById(data);
+						console.log(vedetty);
+						let vedettyNimi = document.getElementById(data);
 						vedetty.style.position = "absolute";
 						vedetty.style.left = e.offsetX + "px";
 						vedetty.style.top = e.offsetY + "px";
 						console.log(vedetty.textContent);
-						piirraPolylineja(vedetty);
+						piirraPolylineja(vedettyNimi);
 				
 				if (data) {
 					try {
-						e.target.appendChild(document.getElementById(data));
+						e.target.appendChild(vedetty);
 					} catch(error) {
 						console.log(data);
 					}
