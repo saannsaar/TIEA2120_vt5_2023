@@ -59,6 +59,13 @@ window.addEventListener("load", function(e) {
 			let marker;
 		   palloArr.forEach(pallo => {
 			pallo.addEventListener("click", function(e) {
+				for (let pallo of palloArr) {
+					console.log(pallo);
+					if (pallo.options.fillColor == "red") {
+						pallo.setStyle({fillColor: "#fo3"});
+						pallo.setStyle({fillOpacity: "0.3"});
+					}
+				}
 				if (marker == undefined) {
 				
 				console.log(e.target);
@@ -115,6 +122,34 @@ window.addEventListener("load", function(e) {
 					}
 
 					tsekkaaKartalla();
+					console.log(document.getElementsByClassName("joukkueet"));
+
+					let joukkueLit = document.getElementsByClassName("joukkueet");
+					let rastitObj = {};
+					for ( let rasti in rastit) {
+						let rLat = rastit[rasti].lat;
+						let rLon = rastit[rasti].lon;
+						let koordinaat = [];
+						koordinaat.push(rLat);
+						koordinaat.push(rLon);
+							rastitObj[rasti] = koordinaat;
+					}
+					for ( let joukkis of joukkueLit) {
+					    for (let j of data.joukkueet) {
+							if (joukkis.textContent.includes(j.nimi)) {
+								joukkis.textContent = "";
+								let arra = [];
+								let rastileimaukset = j.rastileimaukset;
+									for (let leimaus of rastileimaukset) {
+										arra.push(rastitObj[leimaus.rasti]);
+									} 
+								let koordinaatit = arra;
+								joukkis.textContent = j.nimi + " (" + laskeMatka(koordinaatit) + ")";
+							}
+						}
+					}
+
+					
 
 					
 				});
@@ -200,29 +235,9 @@ window.addEventListener("load", function(e) {
 						} 
 				let koordinaatit = arra;
 			
-				let matka=0;
-				if (koordinaatit.length === 0) {
-					matka = 0;
-
-				} else if (koordinaatit.length > 0) {
-
-					for (let k of koordinaatit) {
-						if ( k === undefined) {
-							
-							koordinaatit.splice(k);
-						}						
-					}
-						for ( let i = 0; i < koordinaatit.length-1; i++) {
-							matka += getDistanceFromLatLonInKm(koordinaatit[i], koordinaatit[i+1]);
-							matka = Math.round(matka * 10) / 10;
-						}
-						
-
-				}
-				 
 							
 				let li = document.createElement("li");
-				let joukkuenimi = document.createTextNode(joukkue.nimi + " ("+ matka + " km)");
+				let joukkuenimi = document.createTextNode(joukkue.nimi + " ("+ laskeMatka(koordinaatit) + " km)");
 				li.style.backgroundColor = rainbow(joukkueet.length, joukkueet.indexOf(joukkue));
 				li.classList.add("joukkueet");
 
@@ -232,6 +247,30 @@ window.addEventListener("load", function(e) {
 				ul.appendChild(li);
 				
 			}
+		   }
+
+		   function laskeMatka(koordinaatit) {
+
+			let matka=0;
+			if (koordinaatit.length === 0) {
+				matka = 0;
+
+			} else if (koordinaatit.length > 0) {
+
+				for (let k of koordinaatit) {
+					if ( k === undefined) {
+						
+						koordinaatit.splice(k);
+					}						
+				}
+					for ( let i = 0; i < koordinaatit.length-1; i++) {
+						matka += getDistanceFromLatLonInKm(koordinaatit[i], koordinaatit[i+1]);
+						matka = Math.round(matka * 10) / 10;
+					}
+					
+
+			}
+			return matka;
 		   }
 		   rastilistaus();
 
@@ -470,7 +509,7 @@ window.addEventListener("load", function(e) {
 				
 			});
 
-			
+			// funktio joukkueiden kulkeman matkan piirtämiselle
 			function piirraPolylineja(vedetty) {
 				let rastitObj = {};
 				for ( let rasti in rastit) {
